@@ -1,24 +1,32 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import { ProductCard } from "../components/ProductCard";
-import { useQuery } from "@tanstack/react-query";
 import { QUERY_PRODUCTS } from "../lib/shopify";
 
-export const Route = createFileRoute("/")({ component: App });
+const productsQueryOptions = queryOptions({
+  queryKey: ["products", 20],
+  queryFn: () => QUERY_PRODUCTS(20),
+});
+
+export const Route = createFileRoute("/")({
+  // Runs on the server — product data (and image URLs) are in the initial HTML
+  loader: ({ context: { queryClient } }) =>
+    queryClient.ensureQueryData(productsQueryOptions),
+  component: App,
+});
 
 function App() {
-  const { data, isPending, isError } = useQuery({
-    queryKey: ["products", 20],
-    queryFn: () => QUERY_PRODUCTS(20),
-  });
+  const { data, isError } = useQuery(productsQueryOptions);
 
-  if (isPending) return <p>Loading products...</p>;
   if (isError) return <p>Failed to load products.</p>;
 
   return (
     <main className="page-wrap px-4 pb-8 pt-14">
-      {data.map((product) => (
-        <ProductCard key={product.id} product={product} />
-      ))}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 items-start">
+        {(data ?? []).map((product, i) => (
+          <ProductCard key={product.id} product={product} priority={i === 0} />
+        ))}
+      </div>
     </main>
   );
 }

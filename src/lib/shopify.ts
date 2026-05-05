@@ -31,6 +31,29 @@ export interface ShopifyProduct {
   };
 }
 
+export interface ShopifyProductDetail {
+  id: string;
+  title: string;
+  handle: string;
+  description: string;
+  descriptionHtml: string;
+  vendor: string;
+  productType: string;
+  featuredImage: ShopifyImage | null;
+  images: { nodes: ShopifyImage[] };
+  priceRange: { minVariantPrice: ShopifyMoneyV2 };
+  variants: { nodes: ShopifyProductVariant[] };
+  /** Parsed from the custom.compatible_models metafield */
+  compatibleModels: string[] | null;
+}
+
+/** Appends a Shopify CDN width param to get a resized image URL. */
+export function shopifyImageSrc(url: string, width: number) {
+  const u = new URL(url);
+  u.searchParams.set("width", String(width));
+  return u.toString();
+}
+
 const client = createStorefrontApiClient({
   storeDomain: import.meta.env.VITE_SHOPIFY_STORE_DOMAIN,
   apiVersion: "2026-04",
@@ -70,6 +93,61 @@ const productsQuery = `
     }
   }
 `;
+
+const productByHandleQuery = `
+  query ProductByHandle($handle: String!) {
+    product(handle: $handle) {
+      id
+      title
+      handle
+      description
+      descriptionHtml
+      vendor
+      productType
+      featuredImage { url altText }
+      images(first: 20) {
+        nodes { url altText }
+      }
+      priceRange {
+        minVariantPrice { amount currencyCode }
+      }
+      variants(first: 10) {
+        nodes {
+          id title availableForSale
+          price { amount currencyCode }
+        }
+      }
+    }
+  }
+`;
+
+export const QUERY_PRODUCT = async (
+  handle: string,
+): Promise<ShopifyProductDetail | null> => {
+  const { data, errors } = await client.request(productByHandleQuery, {
+    variables: { handle },
+  });
+
+  if (errors) throw new Error(errors.message);
+  if (!data?.product) return null;
+
+  const raw = data.product;
+
+  // Parse descriptionHtml into individual lines by converting block-level
+  // tags to newlines before stripping all remaining HTML tags.
+  const compatibleModels = raw.descriptionHtml
+    ? raw.descriptionHtml
+        .replace(/<\/(p|li|div|br)>/gi, "\n") // block endings → newline
+        .replace(/<br\s*\/?>/gi, "\n") // <br> → newline
+        .replace(/<[^>]+>/g, "") // strip remaining tags
+        .split("\n")
+        .map((l: string) => l.trim())
+        .filter((l: string) => !/^compatibility$/i.test(l)) // drop heading lines
+        .filter(Boolean)
+    : null;
+
+  return { ...raw, compatibleModels };
+};
 
 // Gets all products from Shopify using the Storefront API.
 // amount: number of products to fetch (defaults to 20)
