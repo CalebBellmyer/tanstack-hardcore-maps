@@ -1,12 +1,12 @@
 # FRONTEND
 [x] cart
-[] terms
-[] Warranty
-[] Contact
-[] FAQ
+[x] terms
+[x] Warranty
+[x] Contact
+[x] FAQ
 
 # BACKEND
-[] Cart 
+[x] Cart 
   - Add to cart index
   - Add to cart product
   - Remove from cart
