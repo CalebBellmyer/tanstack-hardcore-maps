@@ -149,6 +149,39 @@ export const QUERY_PRODUCT = async (
   return { ...raw, compatibleModels };
 };
 
+const cartCreateMutation = `
+  mutation CartCreate($lines: [CartLineInput!]!) {
+    cartCreate(input: { lines: $lines }) {
+      cart {
+        checkoutUrl
+      }
+      userErrors {
+        field
+        message
+      }
+    }
+  }
+`;
+
+/** Creates a Shopify cart and returns the hosted checkout URL. */
+export const CREATE_SHOPIFY_CART = async (
+  lines: Array<{ merchandiseId: string; quantity: number }>,
+): Promise<string> => {
+  const { data, errors } = await client.request(cartCreateMutation, {
+    variables: { lines },
+  });
+
+  if (errors) throw new Error(errors.message);
+
+  const userErrors = data?.cartCreate?.userErrors ?? [];
+  if (userErrors.length > 0) throw new Error(userErrors[0].message);
+
+  const checkoutUrl = data?.cartCreate?.cart?.checkoutUrl;
+  if (!checkoutUrl) throw new Error("Failed to create Shopify cart");
+
+  return checkoutUrl;
+};
+
 // Gets all products from Shopify using the Storefront API.
 // amount: number of products to fetch (defaults to 20)
 export const QUERY_PRODUCTS = async (

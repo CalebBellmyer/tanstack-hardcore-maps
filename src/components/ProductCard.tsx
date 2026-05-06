@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { ShopifyProduct } from "../lib/shopify";
 import { shopifyImageSrc } from "../lib/shopify";
+import { useCart } from "./CartProvider";
 import { cn } from "../lib/utils";
 
 interface ProductCardProps {
@@ -12,6 +13,8 @@ interface ProductCardProps {
 const SRCSET_WIDTHS = [400, 600, 800, 1000] as const;
 
 export function ProductCard({ product, priority = false }: ProductCardProps) {
+  const { addItem } = useCart();
+  const variant = product.variants.nodes[0];
   const price = product.priceRange.minVariantPrice.amount;
   const currency = product.priceRange.minVariantPrice.currencyCode;
 
@@ -76,7 +79,19 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
               "px-4 py-2 text-sm font-semibold",
               "transition-colors hover:bg-primary/90",
             )}
-            onClick={(e) => e.preventDefault()}
+            onClick={(e) => {
+              e.preventDefault();
+              if (!variant) return;
+              addItem({
+                variantId: variant.id,
+                handle: product.handle,
+                price: variant.price.amount,
+                currencyCode: variant.price.currencyCode,
+                title: product.title,
+                imageUrl: product.featuredImage?.url ?? "",
+                imageAlt: product.featuredImage?.altText ?? product.title,
+              });
+            }}
           >
             Add to Cart
           </button>

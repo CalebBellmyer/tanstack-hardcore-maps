@@ -1,5 +1,5 @@
 # FRONTEND
-[] cart
+[x] cart
 [] terms
 [] Warranty
 [] Contact

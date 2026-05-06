@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { QUERY_PRODUCT, shopifyImageSrc } from "#/lib/shopify";
+import { useCart } from "#/components/CartProvider";
 import { cn } from "#/lib/utils";
 
 const productQueryOptions = (handle: string) =>
@@ -35,6 +36,7 @@ const SRCSET_WIDTHS = [400, 600, 800, 1200] as const;
 function ProductPage() {
   const { handle } = Route.useParams();
   const { data: product } = useQuery(productQueryOptions(handle));
+  const { addItem } = useCart();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isZoomed, setIsZoomed] = useState(false);
@@ -44,6 +46,21 @@ function ProductPage() {
   const images = product.images.nodes;
   const selectedImage = images[selectedIndex] ?? images[0];
   const isCover = product.productType.toLowerCase().includes("cover");
+  const firstVariant = product.variants.nodes[0];
+
+  const handleAddToCart = () => {
+    if (!firstVariant) return;
+    addItem({
+      variantId: firstVariant.id,
+      handle: product.handle,
+      price: firstVariant.price.amount,
+      currencyCode: firstVariant.price.currencyCode,
+      title: product.title,
+      imageUrl: selectedImage?.url ?? "",
+      imageAlt: selectedImage?.altText ?? product.title,
+      quantity,
+    });
+  };
 
   const formatted = new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -167,6 +184,7 @@ function ProductPage() {
                     />
                     <button
                       type="button"
+                      onClick={handleAddToCart}
                       className="flex-1 rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
                     >
                       Add to Cart
