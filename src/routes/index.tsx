@@ -10,8 +10,13 @@ const productsQueryOptions = queryOptions({
 
 export const Route = createFileRoute("/")({
   // Runs on the server — product data (and image URLs) are in the initial HTML
-  loader: ({ context: { queryClient } }) =>
-    queryClient.ensureQueryData(productsQueryOptions),
+  loader: async ({ context: { queryClient } }) => {
+    try {
+      await queryClient.ensureQueryData(productsQueryOptions);
+    } catch (e) {
+      console.error("Failed to load products:", e);
+    }
+  },
   component: App,
 });
 
