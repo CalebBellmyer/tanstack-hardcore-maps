@@ -36,24 +36,29 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
       />
 
       {/* Image */}
-      <div className="aspect-[4/3] bg-muted w-full">
-        {product.featuredImage ? (
-          <img
-            src={shopifyImageSrc(product.featuredImage.url, 600)}
-            srcSet={SRCSET_WIDTHS.map(
-              (w) => `${shopifyImageSrc(product.featuredImage!.url, w)} ${w}w`,
-            ).join(", ")}
-            sizes="(min-width: 1024px) 340px, (min-width: 640px) 50vw, 100vw"
-            alt={product.featuredImage.altText ?? product.title}
-            fetchPriority={priority ? "high" : "auto"}
-            loading={priority ? "eager" : "lazy"}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
-            No Image
-          </div>
-        )}
+      <div className="aspect-4/3 bg-muted w-full">
+        {(() => {
+          const img = product.featuredImage;
+          if (!img)
+            return (
+              <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
+                No Image
+              </div>
+            );
+          return (
+            <img
+              src={shopifyImageSrc(img.url, 600)}
+              srcSet={SRCSET_WIDTHS.map(
+                (w) => `${shopifyImageSrc(img.url, w)} ${w}w`,
+              ).join(", ")}
+              sizes="(min-width: 1024px) 340px, (min-width: 640px) 50vw, 100vw"
+              alt={img.altText ?? product.title}
+              fetchPriority={priority ? "high" : "auto"}
+              loading={priority ? "eager" : "lazy"}
+              className="h-full w-full object-cover"
+            />
+          );
+        })()}
       </div>
 
       {/* Content */}

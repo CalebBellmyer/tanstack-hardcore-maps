@@ -54,14 +54,16 @@ function ProductPage() {
     <div className="min-h-screen bg-muted/30">
       {/* Zoom overlay */}
       {isZoomed && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
-          onClick={() => setIsZoomed(false)}
-        >
-          <div
-            className="relative max-w-4xl w-full"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <button
+            type="button"
+            aria-label="Close image zoom"
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => setIsZoomed(false)}
+          />
+          {/* Content */}
+          <div className="relative z-10 max-w-4xl w-full">
             <button
               type="button"
               onClick={() => setIsZoomed(false)}
@@ -83,8 +85,10 @@ function ProductPage() {
           {/* ── Left: Image Gallery ── */}
           <div className="rounded-xl border bg-card shadow-sm p-4 flex flex-col gap-4">
             {/* Main image */}
-            <div
-              className="aspect-square cursor-zoom-in overflow-hidden rounded-xl bg-muted"
+            <button
+              type="button"
+              aria-label="Zoom image"
+              className="aspect-square cursor-zoom-in overflow-hidden rounded-xl bg-muted w-full"
               onClick={() => setIsZoomed(true)}
             >
               <img
@@ -97,14 +101,14 @@ function ProductPage() {
                 className="h-full w-full object-contain"
                 fetchPriority="high"
               />
-            </div>
+            </button>
 
             {/* Thumbnails */}
             {images.length > 1 && (
               <div className="flex flex-wrap justify-center gap-2">
                 {images.map((img, i) => (
                   <button
-                    key={i}
+                    key={img.url}
                     type="button"
                     onClick={() => setSelectedIndex(i)}
                     className={cn(
@@ -183,9 +187,9 @@ function ProductPage() {
                     Compatibility
                   </h3>
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    {product.compatibleModels.map((model, i) => (
+                    {product.compatibleModels.map((model) => (
                       <div
-                        key={i}
+                        key={model}
                         className="flex  items-center gap-3 px-1 py-1"
                       >
                         <span className="text-primary font-semibold">✓</span>
