@@ -107,6 +107,58 @@ const productsQuery = `
   }
 `;
 
+const productsByTypeQuery = `
+  query ProductsByType($first: Int!, $query: String!) {
+    products(first: $first, query: $query) {
+      nodes {
+        id
+        title
+        handle
+        description
+        featuredImage {
+          url
+          altText
+        }
+        priceRange {
+          minVariantPrice {
+            amount
+            currencyCode
+          }
+        }
+        variants(first: 10) {
+          nodes {
+            id
+            title
+            availableForSale
+            price {
+              amount
+              currencyCode
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+export const QUERY_PRODUCTS_BY_TYPE = async (
+  productType: string,
+  amount = 20,
+): Promise<ShopifyProduct[]> => {
+  const { data, errors } = await getClient().request(productsByTypeQuery, {
+    variables: {
+      first: amount,
+      query: `product_type:'${productType}'`,
+    },
+  });
+
+  if (errors) {
+    throw new Error(errors.message);
+  }
+
+  return data?.products.nodes ?? [];
+};
+
 const productByHandleQuery = `
   query ProductByHandle($handle: String!) {
     product(handle: $handle) {

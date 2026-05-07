@@ -1,18 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { queryOptions, useQuery } from "@tanstack/react-query";
-import { ProductCard } from "../components/ProductCard";
-import { QUERY_PRODUCTS } from "../lib/shopify";
+import {
+  ProductGrid,
+  productsByTypeQueryOptions,
+} from "../components/ProductGrid";
 
-const productsQueryOptions = queryOptions({
-  queryKey: ["products", 20],
-  queryFn: () => QUERY_PRODUCTS(20),
-});
+// TODO: replace with the product type string from your Shopify admin.
 
 export const Route = createFileRoute("/")({
-  // Runs on the server — product data (and image URLs) are in the initial HTML
   loader: async ({ context: { queryClient } }) => {
     try {
-      await queryClient.ensureQueryData(productsQueryOptions);
+      await queryClient.ensureQueryData(
+        productsByTypeQueryOptions(PRODUCT_TYPE),
+      );
     } catch (e) {
       console.error("Failed to load products:", e);
     }
@@ -21,16 +20,15 @@ export const Route = createFileRoute("/")({
 });
 
 function App() {
-  const { data, isError } = useQuery(productsQueryOptions);
-
-  if (isError) return <p>Failed to load products.</p>;
-
   return (
     <main className="page-wrap px-4 pb-8 pt-14">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 items-start">
-        {(data ?? []).map((product, i) => (
-          <ProductCard key={product.id} product={product} priority={i === 0} />
-        ))}
+      <div>
+        <h2 className="text-2xl font-bold mb-4">Cases</h2>
+        <ProductGrid productType={"case"} />
+      </div>
+      <div className="mt-8">
+        <h2 className="text-2xl font-bold mb-4">Maps</h2>
+        <ProductGrid productType={"map"} />
       </div>
     </main>
   );
