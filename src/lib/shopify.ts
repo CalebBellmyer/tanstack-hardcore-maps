@@ -54,11 +54,24 @@ export function shopifyImageSrc(url: string, width: number) {
   return u.toString();
 }
 
-const client = createStorefrontApiClient({
-  storeDomain: import.meta.env.VITE_SHOPIFY_STORE_DOMAIN,
-  apiVersion: "2026-04",
-  publicAccessToken: import.meta.env.VITE_SHOPIFY_STOREFRONT_ACCESS_TOKEN,
-});
+let _client: ReturnType<typeof createStorefrontApiClient> | null = null;
+
+function getClient() {
+  if (_client) return _client;
+  const domain = import.meta.env.VITE_SHOPIFY_STORE_DOMAIN;
+  const token = import.meta.env.VITE_SHOPIFY_STOREFRONT_ACCESS_TOKEN;
+  if (!domain || !token) {
+    throw new Error(
+      "Missing Shopify env vars: VITE_SHOPIFY_STORE_DOMAIN and VITE_SHOPIFY_STOREFRONT_ACCESS_TOKEN must be set at build time.",
+    );
+  }
+  _client = createStorefrontApiClient({
+    storeDomain: domain,
+    apiVersion: "2026-04",
+    publicAccessToken: token,
+  });
+  return _client;
+}
 
 const productsQuery = `
   query ProductsQuery($first: Int!) {
@@ -124,7 +137,7 @@ const productByHandleQuery = `
 export const QUERY_PRODUCT = async (
   handle: string,
 ): Promise<ShopifyProductDetail | null> => {
-  const { data, errors } = await client.request(productByHandleQuery, {
+  const { data, errors } = await getClient().request(productByHandleQuery, {
     variables: { handle },
   });
 
@@ -167,7 +180,7 @@ const cartCreateMutation = `
 export const CREATE_SHOPIFY_CART = async (
   lines: Array<{ merchandiseId: string; quantity: number }>,
 ): Promise<string> => {
-  const { data, errors } = await client.request(cartCreateMutation, {
+  const { data, errors } = await getClient().request(cartCreateMutation, {
     variables: { lines },
   });
 
@@ -187,7 +200,7 @@ export const CREATE_SHOPIFY_CART = async (
 export const QUERY_PRODUCTS = async (
   amount = 20,
 ): Promise<ShopifyProduct[]> => {
-  const { data, errors } = await client.request(productsQuery, {
+  const { data, errors } = await getClient().request(productsQuery, {
     variables: {
       first: amount,
     },

@@ -26,7 +26,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
   return (
     <div
       className={cn(
-        "relative rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden",
+        "relative rounded-xl max-w-lg border bg-card text-card-foreground shadow-sm overflow-hidden",
         "transition-all hover:-translate-y-0.5 hover:shadow-md",
       )}
     >
