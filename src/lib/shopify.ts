@@ -43,7 +43,7 @@ export interface ShopifyProductDetail {
   images: { nodes: ShopifyImage[] };
   priceRange: { minVariantPrice: ShopifyMoneyV2 };
   variants: { nodes: ShopifyProductVariant[] };
-  /** Parsed from the custom.compatible_models metafield */
+  /** Values from the custom.compatible_devices product metafield (List · Single line text) */
   compatibleModels: string[] | null;
 }
 
@@ -182,6 +182,10 @@ const productByHandleQuery = `
           price { amount currencyCode }
         }
       }
+      metafield(namespace: "custom", key: "compatible_devices") {
+        value
+        type
+      }
     }
   }
 `;
@@ -198,18 +202,24 @@ export const QUERY_PRODUCT = async (
 
   const raw = data.product;
 
-  // Parse descriptionHtml into individual lines by converting block-level
-  // tags to newlines before stripping all remaining HTML tags.
-  const compatibleModels = raw.descriptionHtml
-    ? raw.descriptionHtml
-        .replace(/<\/(p|li|div|br)>/gi, "\n") // block endings → newline
-        .replace(/<br\s*\/?>/gi, "\n") // <br> → newline
-        .replace(/<[^>]+>/g, "") // strip remaining tags
-        .split("\n")
-        .map((l: string) => l.trim())
-        .filter((l: string) => !/^compatibility$/i.test(l)) // drop heading lines
-        .filter(Boolean)
-    : null;
+  // Pull compatible device names from the custom.compatible_devices metafield.
+  // The Storefront API returns the value as a JSON-encoded string array, e.g.
+  // ["GPSMAP 923","GPSMAP 943"]. Field type must be list.single_line_text_field.
+  let compatibleModels: string[] | null = null;
+
+  if (raw.metafield?.value) {
+    try {
+      const parsed: unknown = JSON.parse(raw.metafield.value);
+      if (Array.isArray(parsed)) {
+        const names = parsed.filter(
+          (v): v is string => typeof v === "string" && !v.startsWith("gid://"),
+        );
+        if (names.length > 0) compatibleModels = names;
+      }
+    } catch {
+      // not valid JSON – leave compatibleModels as null
+    }
+  }
 
   return { ...raw, compatibleModels };
 };
