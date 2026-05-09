@@ -42,6 +42,7 @@ function ProductPage() {
   const [isZoomed, setIsZoomed] = useState(false);
 
   if (!product) return null;
+  console.log("product", product);
 
   const images = product.images.nodes;
   const selectedImage = images[selectedIndex] ?? images[0];
@@ -66,6 +67,11 @@ function ProductPage() {
     style: "currency",
     currency: product.priceRange.minVariantPrice.currencyCode,
   }).format(Number(product.priceRange.minVariantPrice.amount));
+
+  const listTitle = isCover ? "Compatibility" : "Specs";
+  const listItems = isCover
+    ? product.compatibleModels
+    : product.mapSpecifications;
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -198,25 +204,34 @@ function ProductPage() {
             </div>
 
             {/* checkmark list */}
-            {product.compatibleModels &&
-              product.compatibleModels.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                    Compatibility
-                  </h3>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    {product.compatibleModels.map((model) => (
-                      <div
-                        key={model}
-                        className="flex  items-center gap-3 px-1 py-1"
-                      >
+            {listItems && listItems.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  {listTitle}
+                </h3>
+
+                <div
+                  className={
+                    isCover
+                      ? "grid grid-cols-2 gap-2 text-sm"
+                      : "grid grid-cols-1 gap-2 text-sm"
+                  }
+                >
+                  {listItems.map((item) => (
+                    <div
+                      key={item}
+                      className="flex items-center gap-3 px-1 py-1"
+                    >
+                      {isCover && (
                         <span className="text-primary font-semibold">✓</span>
-                        <span>{model}</span>
-                      </div>
-                    ))}
-                  </div>
+                      )}
+
+                      <span>{item}</span>
+                    </div>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
             <hr className="border-border" />
 

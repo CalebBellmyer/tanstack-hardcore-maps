@@ -44,7 +44,8 @@ export interface ShopifyProductDetail {
   priceRange: { minVariantPrice: ShopifyMoneyV2 };
   variants: { nodes: ShopifyProductVariant[] };
   /** Values from the custom.compatible_devices product metafield (List · Single line text) */
-  compatibleModels: string[] | null;
+  compatibleModels?: string[] | null;
+  mapSpecifications?: string[] | null;
 }
 
 /** Appends a Shopify CDN width param to get a resized image URL. */
@@ -182,7 +183,11 @@ const productByHandleQuery = `
           price { amount currencyCode }
         }
       }
-      metafield(namespace: "custom", key: "compatible_devices") {
+      compatibleDevices: metafield(namespace: "custom", key: "compatible_devices") {
+        value
+        type
+      }
+      mapSpecifications: metafield(namespace: "custom", key: "map_specifications") {
         value
         type
       }
@@ -207,9 +212,9 @@ export const QUERY_PRODUCT = async (
   // ["GPSMAP 923","GPSMAP 943"]. Field type must be list.single_line_text_field.
   let compatibleModels: string[] | null = null;
 
-  if (raw.metafield?.value) {
+  if (raw.compatibleDevices?.value) {
     try {
-      const parsed: unknown = JSON.parse(raw.metafield.value);
+      const parsed: unknown = JSON.parse(raw.compatibleDevices.value);
       if (Array.isArray(parsed)) {
         const names = parsed.filter(
           (v): v is string => typeof v === "string" && !v.startsWith("gid://"),
@@ -221,7 +226,21 @@ export const QUERY_PRODUCT = async (
     }
   }
 
-  return { ...raw, compatibleModels };
+  let mapSpecifications: string[] | null = null;
+
+  if (raw.mapSpecifications?.value) {
+    try {
+      const parsed: unknown = JSON.parse(raw.mapSpecifications.value);
+      if (Array.isArray(parsed)) {
+        const specs = parsed.filter((v): v is string => typeof v === "string");
+        if (specs.length > 0) mapSpecifications = specs;
+      }
+    } catch {
+      // not valid JSON – leave mapSpecifications as null
+    }
+  }
+
+  return { ...raw, compatibleModels, mapSpecifications };
 };
 
 const cartCreateMutation = `
