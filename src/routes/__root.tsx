@@ -70,7 +70,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="font-sans antialiased wrap:anywhere selection:bg-[rgba(79,184,178,0.24)]">
+      <body className="font-sans pt-8 md:pt-0 antialiased wrap:anywhere selection:bg-[rgba(79,184,178,0.24)]">
         <CartProvider>
           <Header />
           {children}

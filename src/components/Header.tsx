@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 
 export default function Header() {
   return (
-    <header className="w-full bg-background shadow-sm">
+    <header className="w-full bg-background shadow-sm fixed top-0 z-50 md:static md:z-auto">
       <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
         <Link to="/">
           <img
