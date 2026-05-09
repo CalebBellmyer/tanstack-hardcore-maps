@@ -67,10 +67,8 @@ function ProductPage() {
     currency: product.priceRange.minVariantPrice.currencyCode,
   }).format(Number(product.priceRange.minVariantPrice.amount));
 
-  const listTitle = isCover ? "Compatibility" : "Specs";
-  const listItems = isCover
-    ? product.compatibleModels
-    : product.mapSpecifications;
+  const compatibleModels = product.compatibleModels ?? [];
+  const mapSpecifications = product.mapSpecifications ?? [];
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -202,30 +200,39 @@ function ProductPage() {
               </div>
             </div>
 
-            {/* checkmark list */}
-            {listItems && listItems.length > 0 && (
+            {/* Compatibility — shown when the metafield has data */}
+            {compatibleModels.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  {listTitle}
+                  Compatibility
                 </h3>
-
-                <div
-                  className={
-                    isCover
-                      ? "grid grid-cols-2 gap-2 text-sm"
-                      : "grid grid-cols-1 gap-2 text-sm"
-                  }
-                >
-                  {listItems.map((item) => (
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {compatibleModels.map((model) => (
                     <div
-                      key={item}
+                      key={model}
                       className="flex items-center gap-3 px-1 py-1"
                     >
-                      {isCover && (
-                        <span className="text-primary font-semibold">✓</span>
-                      )}
+                      <span className="text-primary font-semibold">✓</span>
+                      <span>{model}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-                      <span>{item}</span>
+            {/* Specifications — shown when the metafield has data */}
+            {mapSpecifications.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  Specs
+                </h3>
+                <div className="grid grid-cols-1 gap-2 text-sm">
+                  {mapSpecifications.map((spec) => (
+                    <div
+                      key={spec}
+                      className="flex items-center gap-3 px-1 py-1"
+                    >
+                      <span>{spec}</span>
                     </div>
                   ))}
                 </div>
