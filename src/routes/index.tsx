@@ -24,7 +24,6 @@ export const Route = createFileRoute("/")({
 function App() {
   return (
     <main className="page-wrap px-4 pb-8 pt-14 flex flex-col items-center">
-      {/*The following divs should be horizontally centered*/}
       <div>
         <h2 className="text-2xl font-bold mb-4">Cases</h2>
         <ProductGrid productType={"case"} />

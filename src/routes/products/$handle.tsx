@@ -42,7 +42,6 @@ function ProductPage() {
   const [isZoomed, setIsZoomed] = useState(false);
 
   if (!product) return null;
-  console.log("product", product);
 
   const images = product.images.nodes;
   const selectedImage = images[selectedIndex] ?? images[0];
