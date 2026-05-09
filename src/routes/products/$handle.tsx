@@ -97,8 +97,8 @@ function ProductPage() {
         </div>
       )}
 
-      <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-10">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+      <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-10 ">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 sm:grid-cols-1">
           {/* ── Left: Image Gallery ── */}
           <div className="rounded-xl border bg-card shadow-sm p-4 flex flex-col gap-4">
             {/* Main image */}
@@ -197,7 +197,7 @@ function ProductPage() {
               </div>
             </div>
 
-            {/* Description as checkmark list */}
+            {/* checkmark list */}
             {product.compatibleModels &&
               product.compatibleModels.length > 0 && (
                 <div className="space-y-3">
@@ -231,6 +231,12 @@ function ProductPage() {
                   : "NOT FOR NAVIGATIONAL PURPOSES. This 3D map is designed to help you plan your next fishing trip. While we use detailed topographic and bathymetric data, nature is always changing, and these depths are approximations only."}
               </p>
             </div>
+          </div>
+          {/* Full width Description*/}
+          <div className="lg:col-span-2 rounded-xl border bg-card shadow-sm p-6 flex flex-col gap-6">
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {product.description}
+            </p>
           </div>
         </div>
       </div>
