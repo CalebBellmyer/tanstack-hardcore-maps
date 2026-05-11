@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const CONTACT_EMAIL = "contact@hardcoremaps.com";
+const user = "contact";
+const url = "hardcoremaps";
+
+const CONTACT_EMAIL = `${user}@${url}.com`;
 
 export const Route = createFileRoute("/contact")({
   component: ContactPage,
