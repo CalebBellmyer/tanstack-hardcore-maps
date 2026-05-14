@@ -153,9 +153,17 @@ function ProductPage() {
           <div className="rounded-xl border bg-card shadow-sm p-6 flex flex-col gap-6">
             {/* Title + Vendor */}
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                {product.title}
-              </h1>
+              {isCover && (
+                <h1 className="text-3xl font-bold tracking-tight">
+                  {product.title}
+                </h1>
+              )}
+              {!isCover && (
+                <p className="text-3xl font-bold tracking-tight">
+                  {product.title}
+                  <span> 3D Map</span>
+                </p>
+              )}
               {product.vendor && (
                 <p className="mt-1 text-sm text-muted-foreground">
                   {product.vendor}
@@ -224,7 +232,7 @@ function ProductPage() {
             {mapSpecifications.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  Specs
+                  Specifications
                 </h3>
                 <div className="grid grid-cols-1 gap-2 text-sm">
                   {mapSpecifications.map((spec) => (
