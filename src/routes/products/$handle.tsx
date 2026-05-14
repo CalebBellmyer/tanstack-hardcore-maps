@@ -70,6 +70,8 @@ function ProductPage() {
   const compatibleModels = product.compatibleModels ?? [];
   const mapSpecifications = product.mapSpecifications ?? [];
 
+  console.log("product collections", product.collections);
+
   return (
     <div className="min-h-screen bg-muted/30">
       {/* Zoom overlay */}
@@ -164,9 +166,10 @@ function ProductPage() {
                   <span> 3D Map</span>
                 </p>
               )}
-              {product.vendor && (
+              {product.collections && (
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {product.vendor}
+                  {product.collections[0].handle.slice(0, 1).toUpperCase() +
+                    product.collections[0].handle.slice(1)}
                 </p>
               )}
             </div>

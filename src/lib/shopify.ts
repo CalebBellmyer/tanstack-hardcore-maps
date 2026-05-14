@@ -17,12 +17,20 @@ export interface ShopifyImage {
   altText: string | null;
 }
 
+export interface ShopifyCollection {
+  id: string;
+  title: string;
+  handle: string;
+  description: string | null;
+}
+
 export interface ShopifyProduct {
   id: string;
   title: string;
   handle: string;
   description: string;
   featuredImage: ShopifyImage | null;
+  collections: ShopifyCollection[];
   priceRange: {
     minVariantPrice: ShopifyMoneyV2;
   };
@@ -41,6 +49,7 @@ export interface ShopifyProductDetail {
   productType: string;
   featuredImage: ShopifyImage | null;
   images: { nodes: ShopifyImage[] };
+  collections: ShopifyCollection[];
   priceRange: { minVariantPrice: ShopifyMoneyV2 };
   variants: { nodes: ShopifyProductVariant[] };
   /** Values from the custom.compatible_devices product metafield (List · Single line text) */
@@ -170,7 +179,16 @@ const productByHandleQuery = `
       descriptionHtml
       vendor
       productType
+
       featuredImage { url altText }
+      collections(first: 10) {
+        nodes {
+          id
+          title
+          handle
+          description
+        }
+      }
       images(first: 20) {
         nodes { url altText }
       }
@@ -240,7 +258,12 @@ export const QUERY_PRODUCT = async (
     }
   }
 
-  return { ...raw, compatibleModels, mapSpecifications };
+  return {
+    ...raw,
+    collections: raw.collections?.nodes ?? [],
+    compatibleModels,
+    mapSpecifications,
+  };
 };
 
 const cartCreateMutation = `
