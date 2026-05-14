@@ -256,7 +256,7 @@ function ProductPage() {
           {/* Full width Description*/}
           <div className="lg:col-span-2 rounded-xl border bg-card shadow-sm p-6 flex flex-col gap-6">
             <p className="text-sm text-muted-foreground leading-relaxed">
-              {product.description}
+              {product.description.replaceAll("{{title}}", product.title)}
             </p>
           </div>
         </div>
