@@ -45,7 +45,9 @@ function ProductPage() {
 
   const images = product.images.nodes;
   const selectedImage = images[selectedIndex] ?? images[0];
-  const isCover = product.productType.toLowerCase().includes("cover");
+  const isCover =
+    product.productType.toLowerCase().includes("cover") ||
+    product.productType.toLowerCase().includes("case");
   const firstVariant = product.variants.nodes[0];
 
   const handleAddToCart = () => {
@@ -106,23 +108,33 @@ function ProductPage() {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 sm:grid-cols-1">
           {/* ── Left: Image Gallery ── */}
           <div className="rounded-xl border bg-card shadow-sm p-4 flex flex-col gap-4">
-            {/* Main image */}
+            {/* Main image
+                All images are rendered and start downloading immediately.
+                Switching thumbnails is instant (opacity toggle, no network wait). */}
             <button
               type="button"
               aria-label="Zoom image"
-              className="aspect-square cursor-zoom-in overflow-hidden rounded-xl bg-muted w-full"
+              className="relative aspect-square cursor-zoom-in overflow-hidden rounded-xl bg-muted w-full"
               onClick={() => setIsZoomed(true)}
             >
-              <img
-                src={shopifyImageSrc(selectedImage.url, 600)}
-                srcSet={SRCSET_WIDTHS.map(
-                  (w) => `${shopifyImageSrc(selectedImage.url, w)} ${w}w`,
-                ).join(", ")}
-                sizes="(min-width: 1024px) 50vw, 100vw"
-                alt={selectedImage.altText ?? product.title}
-                className="h-full w-full object-contain"
-                fetchPriority="high"
-              />
+              {images.map((img, i) => (
+                <img
+                  key={img.url}
+                  src={shopifyImageSrc(img.url, 600)}
+                  srcSet={SRCSET_WIDTHS.map(
+                    (w) => `${shopifyImageSrc(img.url, w)} ${w}w`,
+                  ).join(", ")}
+                  sizes="(min-width: 1024px) 50vw, 100vw"
+                  alt={img.altText ?? product.title}
+                  fetchPriority={i === 0 ? "high" : "auto"}
+                  className={cn(
+                    "absolute inset-0 h-full w-full object-contain transition-opacity duration-150",
+                    i === selectedIndex
+                      ? "opacity-100"
+                      : "opacity-0 pointer-events-none",
+                  )}
+                />
+              ))}
             </button>
 
             {/* Thumbnails */}
