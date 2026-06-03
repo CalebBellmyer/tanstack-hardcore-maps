@@ -620,8 +620,7 @@ export function PrimaryCta({
       size="lg"
       className={`h-13 rounded-xl px-6 text-base font-bold ${className}`}
     >
-      {/*TODO: Point to a all maps grid page */}
-      <Link to="/" hash="featured-maps">
+      <Link to="/products/maps">
         {children}
         <ArrowRight className="size-4" />
       </Link>

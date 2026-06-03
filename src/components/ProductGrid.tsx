@@ -1,4 +1,4 @@
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { useQuery, queryOptions } from "@tanstack/react-query";
 import { ProductCard } from "./ProductCard";
 import { QUERY_PRODUCTS_BY_TYPE } from "../lib/shopify";
 

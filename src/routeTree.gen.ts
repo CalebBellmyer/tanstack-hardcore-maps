@@ -17,6 +17,8 @@ import { Route as CartRouteImport } from './routes/cart'
 import { Route as All_productsRouteImport } from './routes/all_products'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProductsMapsRouteImport } from './routes/products/maps'
+import { Route as ProductsCasesRouteImport } from './routes/products/cases'
 import { Route as ProductsHandleRouteImport } from './routes/products/$handle'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-query'
 
@@ -60,6 +62,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProductsMapsRoute = ProductsMapsRouteImport.update({
+  id: '/products/maps',
+  path: '/products/maps',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductsCasesRoute = ProductsCasesRouteImport.update({
+  id: '/products/cases',
+  path: '/products/cases',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductsHandleRoute = ProductsHandleRouteImport.update({
   id: '/products/$handle',
   path: '/products/$handle',
@@ -82,6 +94,8 @@ export interface FileRoutesByFullPath {
   '/warranty': typeof WarrantyRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/products/$handle': typeof ProductsHandleRoute
+  '/products/cases': typeof ProductsCasesRoute
+  '/products/maps': typeof ProductsMapsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,6 +108,8 @@ export interface FileRoutesByTo {
   '/warranty': typeof WarrantyRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/products/$handle': typeof ProductsHandleRoute
+  '/products/cases': typeof ProductsCasesRoute
+  '/products/maps': typeof ProductsMapsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,6 +123,8 @@ export interface FileRoutesById {
   '/warranty': typeof WarrantyRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/products/$handle': typeof ProductsHandleRoute
+  '/products/cases': typeof ProductsCasesRoute
+  '/products/maps': typeof ProductsMapsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -121,6 +139,8 @@ export interface FileRouteTypes {
     | '/warranty'
     | '/demo/tanstack-query'
     | '/products/$handle'
+    | '/products/cases'
+    | '/products/maps'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -133,6 +153,8 @@ export interface FileRouteTypes {
     | '/warranty'
     | '/demo/tanstack-query'
     | '/products/$handle'
+    | '/products/cases'
+    | '/products/maps'
   id:
     | '__root__'
     | '/'
@@ -145,6 +167,8 @@ export interface FileRouteTypes {
     | '/warranty'
     | '/demo/tanstack-query'
     | '/products/$handle'
+    | '/products/cases'
+    | '/products/maps'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -158,6 +182,8 @@ export interface RootRouteChildren {
   WarrantyRoute: typeof WarrantyRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   ProductsHandleRoute: typeof ProductsHandleRoute
+  ProductsCasesRoute: typeof ProductsCasesRoute
+  ProductsMapsRoute: typeof ProductsMapsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -218,6 +244,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/products/maps': {
+      id: '/products/maps'
+      path: '/products/maps'
+      fullPath: '/products/maps'
+      preLoaderRoute: typeof ProductsMapsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products/cases': {
+      id: '/products/cases'
+      path: '/products/cases'
+      fullPath: '/products/cases'
+      preLoaderRoute: typeof ProductsCasesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/products/$handle': {
       id: '/products/$handle'
       path: '/products/$handle'
@@ -246,6 +286,8 @@ const rootRouteChildren: RootRouteChildren = {
   WarrantyRoute: WarrantyRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   ProductsHandleRoute: ProductsHandleRoute,
+  ProductsCasesRoute: ProductsCasesRoute,
+  ProductsMapsRoute: ProductsMapsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
