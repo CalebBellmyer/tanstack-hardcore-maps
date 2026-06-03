@@ -130,7 +130,6 @@ export function HardcoreMapsLandingPage({
 }: LandingPageProps) {
   return (
     <div className="min-h-screen bg-white text-slate-950">
-      <LandingHeader logoSrc={logoSrc} />
       <main>
         <HeroSection heroProduct={heroProduct} />
         <TrustBar />
@@ -140,41 +139,7 @@ export function HardcoreMapsLandingPage({
         <FaqSection />
         <FinalCtaSection />
       </main>
-      <LandingFooter />
     </div>
-  );
-}
-
-export function LandingHeader({
-  logoSrc = "/NavLogo.svg",
-}: {
-  logoSrc?: string;
-}) {
-  return (
-    <header className="sticky top-0 z-50 border-b bg-white/90 backdrop-blur-md">
-      <div className="mx-auto flex h-17 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link to="/" aria-label="Hardcore Maps home">
-          <img
-            src={logoSrc}
-            alt="Hardcore Maps"
-            className="h-9 w-auto max-w-[48vw] object-contain sm:h-10"
-          />
-        </Link>
-
-        <nav className="hidden items-center gap-8 text-sm font-semibold text-slate-700 md:flex">
-          <SectionLink hash="featured-maps">Maps</SectionLink>
-          <SectionLink hash="how-it-works">How They&apos;re Made</SectionLink>
-          <SectionLink hash="faq">FAQ</SectionLink>
-        </nav>
-
-        <Button variant="outline" asChild className="rounded-xl">
-          <Link to="/cart">
-            <ShoppingCart className="size-4" />
-            Cart
-          </Link>
-        </Button>
-      </div>
-    </header>
   );
 }
 
