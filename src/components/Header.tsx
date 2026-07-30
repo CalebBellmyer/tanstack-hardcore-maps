@@ -22,7 +22,6 @@ export default function Header() {
         {isHomePage ? (
           <nav className="hidden items-center gap-8 text-sm font-semibold text-slate-700 md:flex">
             <SectionLink hash="featured-maps">Maps</SectionLink>
-            <SectionLink hash="how-it-works">How They&apos;re Made</SectionLink>
             <SectionLink hash="faq">FAQ</SectionLink>
           </nav>
         ) : (

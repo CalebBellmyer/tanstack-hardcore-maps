@@ -134,10 +134,10 @@ export function HardcoreMapsLandingPage({
         <HeroSection heroProduct={heroProduct} />
         <TrustBar />
         <WhyHardcoreMapsSection />
-        <OfferSection featuredProduct={heroProduct} />
-        <FeaturedMapsSection products={products} />
+        {/*<OfferSection featuredProduct={heroProduct} />*/}
+        {/*<FeaturedMapsSection products={products} />*/}
         <FaqSection />
-        <FinalCtaSection />
+        {/*<FinalCtaSection />*/}
       </main>
     </div>
   );
@@ -168,15 +168,8 @@ export function HeroSection({
 
       <div className="relative mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-10 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[1.03fr_0.97fr] lg:gap-14 lg:px-8 lg:py-20">
         <div>
-          <Badge
-            variant="outline"
-            className="rounded-full border-primary/20 bg-primary/5 px-3 py-2 text-[11px] font-bold uppercase tracking-widest text-primary"
-          >
-            3D lake maps for anglers and lake homes
-          </Badge>
-
           <h1 className="mt-5 max-w-3xl text-4xl font-black leading-[0.98] tracking-[-0.06em] sm:text-5xl lg:text-7xl">
-            Turn your favorite lake into a map worth displaying.
+            Bring your lake to life with a map worth displaying.
           </h1>
 
           <p className="mt-5 max-w-xl text-base leading-7 text-slate-600 sm:text-lg">
@@ -191,18 +184,14 @@ export function HeroSection({
               size="lg"
               variant="outline"
               className="h-13 rounded-xl px-6 text-base font-bold"
-            >
-              <Link to="/" hash="how-it-works">
-                See how they&apos;re made
-              </Link>
-            </Button>
+            ></Button>
           </div>
 
           <div className="mt-8 grid gap-3 sm:grid-cols-3">
             {[
-              "Free shipping on every map",
-              "Print-to-order production",
-              "Secure Shopify checkout",
+              "Free shipping on every order",
+              "Built to last",
+              "Manufactured & shipped in Oklahoma",
             ].map((item) => (
               <div
                 key={item}
@@ -291,6 +280,11 @@ export function WhyHardcoreMapsSection() {
       icon: MapPinned,
       title: "Their actual lake",
       text: "A personal map of the water they fish, visit, or call home—not generic fishing decor.",
+    },
+    {
+      icon: ArrowRight,
+      title: "Real Precision",
+      text: "Depth based on real lake data.",
     },
     {
       icon: Layers3,
