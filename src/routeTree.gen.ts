@@ -18,6 +18,7 @@ import { Route as All_productsRouteImport } from './routes/all_products'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductsMapsRouteImport } from './routes/products/maps'
+import { Route as ProductsCoastersRouteImport } from './routes/products/coasters'
 import { Route as ProductsCasesRouteImport } from './routes/products/cases'
 import { Route as ProductsHandleRouteImport } from './routes/products/$handle'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-query'
@@ -67,6 +68,11 @@ const ProductsMapsRoute = ProductsMapsRouteImport.update({
   path: '/products/maps',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProductsCoastersRoute = ProductsCoastersRouteImport.update({
+  id: '/products/coasters',
+  path: '/products/coasters',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductsCasesRoute = ProductsCasesRouteImport.update({
   id: '/products/cases',
   path: '/products/cases',
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/products/cases': typeof ProductsCasesRoute
+  '/products/coasters': typeof ProductsCoastersRoute
   '/products/maps': typeof ProductsMapsRoute
 }
 export interface FileRoutesByTo {
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/products/cases': typeof ProductsCasesRoute
+  '/products/coasters': typeof ProductsCoastersRoute
   '/products/maps': typeof ProductsMapsRoute
 }
 export interface FileRoutesById {
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/products/cases': typeof ProductsCasesRoute
+  '/products/coasters': typeof ProductsCoastersRoute
   '/products/maps': typeof ProductsMapsRoute
 }
 export interface FileRouteTypes {
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/demo/tanstack-query'
     | '/products/$handle'
     | '/products/cases'
+    | '/products/coasters'
     | '/products/maps'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/demo/tanstack-query'
     | '/products/$handle'
     | '/products/cases'
+    | '/products/coasters'
     | '/products/maps'
   id:
     | '__root__'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/demo/tanstack-query'
     | '/products/$handle'
     | '/products/cases'
+    | '/products/coasters'
     | '/products/maps'
   fileRoutesById: FileRoutesById
 }
@@ -183,6 +195,7 @@ export interface RootRouteChildren {
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   ProductsHandleRoute: typeof ProductsHandleRoute
   ProductsCasesRoute: typeof ProductsCasesRoute
+  ProductsCoastersRoute: typeof ProductsCoastersRoute
   ProductsMapsRoute: typeof ProductsMapsRoute
 }
 
@@ -251,6 +264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsMapsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/products/coasters': {
+      id: '/products/coasters'
+      path: '/products/coasters'
+      fullPath: '/products/coasters'
+      preLoaderRoute: typeof ProductsCoastersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/products/cases': {
       id: '/products/cases'
       path: '/products/cases'
@@ -287,6 +307,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   ProductsHandleRoute: ProductsHandleRoute,
   ProductsCasesRoute: ProductsCasesRoute,
+  ProductsCoastersRoute: ProductsCoastersRoute,
   ProductsMapsRoute: ProductsMapsRoute,
 }
 export const routeTree = rootRouteImport

@@ -1,86 +1,96 @@
 import { createStorefrontApiClient } from "@shopify/storefront-api-client";
 
+export const COASTER_PRODUCT_HANDLE =
+	"oklahoma-lake-coasters-set-of-4-square-or-round-green-or-white-cork-backing";
+
 export interface ShopifyMoneyV2 {
-  amount: string;
-  currencyCode: string;
+	amount: string;
+	currencyCode: string;
+}
+
+export interface ShopifySelectedOption {
+	name: string;
+	value: string;
 }
 
 export interface ShopifyProductVariant {
-  id: string;
-  title: string;
-  availableForSale: boolean;
-  price: ShopifyMoneyV2;
+	id: string;
+	title: string;
+	availableForSale: boolean;
+	price: ShopifyMoneyV2;
+	selectedOptions: ShopifySelectedOption[];
 }
 
 export interface ShopifyImage {
-  url: string;
-  altText: string | null;
+	url: string;
+	altText: string | null;
 }
 
 export interface ShopifyCollection {
-  id: string;
-  title: string;
-  handle: string;
-  description: string | null;
+	id: string;
+	title: string;
+	handle: string;
+	description: string | null;
 }
 
 export interface ShopifyProduct {
-  id: string;
-  title: string;
-  handle: string;
-  description: string;
-  featuredImage: ShopifyImage | null;
-  collections: ShopifyCollection[];
-  priceRange: {
-    minVariantPrice: ShopifyMoneyV2;
-  };
-  variants: {
-    nodes: ShopifyProductVariant[];
-  };
+	id: string;
+	title: string;
+	handle: string;
+	description: string;
+	productType: string;
+	featuredImage: ShopifyImage | null;
+	collections: ShopifyCollection[];
+	priceRange: {
+		minVariantPrice: ShopifyMoneyV2;
+	};
+	variants: {
+		nodes: ShopifyProductVariant[];
+	};
 }
 
 export interface ShopifyProductDetail {
-  id: string;
-  title: string;
-  handle: string;
-  description: string;
-  descriptionHtml: string;
-  vendor: string;
-  productType: string;
-  featuredImage: ShopifyImage | null;
-  images: { nodes: ShopifyImage[] };
-  collections: ShopifyCollection[];
-  priceRange: { minVariantPrice: ShopifyMoneyV2 };
-  variants: { nodes: ShopifyProductVariant[] };
-  /** Values from the custom.compatible_devices product metafield (List · Single line text) */
-  compatibleModels?: string[] | null;
-  mapSpecifications?: string[] | null;
+	id: string;
+	title: string;
+	handle: string;
+	description: string;
+	descriptionHtml: string;
+	vendor: string;
+	productType: string;
+	featuredImage: ShopifyImage | null;
+	images: { nodes: ShopifyImage[] };
+	collections: ShopifyCollection[];
+	priceRange: { minVariantPrice: ShopifyMoneyV2 };
+	variants: { nodes: ShopifyProductVariant[] };
+	/** Values from the custom.compatible_devices product metafield (List · Single line text) */
+	compatibleModels?: string[] | null;
+	mapSpecifications?: string[] | null;
 }
 
 /** Appends a Shopify CDN width param to get a resized image URL. */
 export function shopifyImageSrc(url: string, width: number) {
-  const u = new URL(url);
-  u.searchParams.set("width", String(width));
-  return u.toString();
+	const u = new URL(url);
+	u.searchParams.set("width", String(width));
+	return u.toString();
 }
 
 let _client: ReturnType<typeof createStorefrontApiClient> | null = null;
 
 function getClient() {
-  if (_client) return _client;
-  const domain = import.meta.env.VITE_SHOPIFY_STORE_DOMAIN;
-  const token = import.meta.env.VITE_SHOPIFY_STOREFRONT_ACCESS_TOKEN;
-  if (!domain || !token) {
-    throw new Error(
-      "Missing Shopify env vars: VITE_SHOPIFY_STORE_DOMAIN and VITE_SHOPIFY_STOREFRONT_ACCESS_TOKEN must be set at build time.",
-    );
-  }
-  _client = createStorefrontApiClient({
-    storeDomain: domain,
-    apiVersion: "2026-04",
-    publicAccessToken: token,
-  });
-  return _client;
+	if (_client) return _client;
+	const domain = import.meta.env.VITE_SHOPIFY_STORE_DOMAIN;
+	const token = import.meta.env.VITE_SHOPIFY_STOREFRONT_ACCESS_TOKEN;
+	if (!domain || !token) {
+		throw new Error(
+			"Missing Shopify env vars: VITE_SHOPIFY_STORE_DOMAIN and VITE_SHOPIFY_STOREFRONT_ACCESS_TOKEN must be set at build time.",
+		);
+	}
+	_client = createStorefrontApiClient({
+		storeDomain: domain,
+		apiVersion: "2026-04",
+		publicAccessToken: token,
+	});
+	return _client;
 }
 
 const productsQuery = `
@@ -91,6 +101,7 @@ const productsQuery = `
         title
         handle
         description
+        productType
         featuredImage {
           url
           altText
@@ -106,6 +117,10 @@ const productsQuery = `
             id
             title
             availableForSale
+            selectedOptions {
+              name
+              value
+            }
             price {
               amount
               currencyCode
@@ -125,6 +140,7 @@ const productsByTypeQuery = `
         title
         handle
         description
+        productType
         featuredImage {
           url
           altText
@@ -140,6 +156,10 @@ const productsByTypeQuery = `
             id
             title
             availableForSale
+            selectedOptions {
+              name
+              value
+            }
             price {
               amount
               currencyCode
@@ -152,21 +172,21 @@ const productsByTypeQuery = `
 `;
 
 export const QUERY_PRODUCTS_BY_TYPE = async (
-  productType: string,
-  amount = 20,
+	productType: string,
+	amount = 20,
 ): Promise<ShopifyProduct[]> => {
-  const { data, errors } = await getClient().request(productsByTypeQuery, {
-    variables: {
-      first: amount,
-      query: `product_type:'${productType}'`,
-    },
-  });
+	const { data, errors } = await getClient().request(productsByTypeQuery, {
+		variables: {
+			first: amount,
+			query: `product_type:'${productType}'`,
+		},
+	});
 
-  if (errors) {
-    throw new Error(errors.message);
-  }
+	if (errors) {
+		throw new Error(errors.message);
+	}
 
-  return data?.products.nodes ?? [];
+	return data?.products.nodes ?? [];
 };
 
 const productByHandleQuery = `
@@ -189,15 +209,19 @@ const productByHandleQuery = `
           description
         }
       }
-      images(first: 20) {
+      images(first: 50) {
         nodes { url altText }
       }
       priceRange {
         minVariantPrice { amount currencyCode }
       }
-      variants(first: 10) {
+      variants(first: 100) {
         nodes {
           id title availableForSale
+          selectedOptions {
+            name
+            value
+          }
           price { amount currencyCode }
         }
       }
@@ -214,56 +238,56 @@ const productByHandleQuery = `
 `;
 
 export const QUERY_PRODUCT = async (
-  handle: string,
+	handle: string,
 ): Promise<ShopifyProductDetail | null> => {
-  const { data, errors } = await getClient().request(productByHandleQuery, {
-    variables: { handle },
-  });
+	const { data, errors } = await getClient().request(productByHandleQuery, {
+		variables: { handle },
+	});
 
-  if (errors) throw new Error(errors.message);
-  if (!data?.product) return null;
+	if (errors) throw new Error(errors.message);
+	if (!data?.product) return null;
 
-  const raw = data.product;
+	const raw = data.product;
 
-  // Pull compatible device names from the custom.compatible_devices metafield.
-  // The Storefront API returns the value as a JSON-encoded string array, e.g.
-  // ["GPSMAP 923","GPSMAP 943"]. Field type must be list.single_line_text_field.
-  let compatibleModels: string[] | null = null;
+	// Pull compatible device names from the custom.compatible_devices metafield.
+	// The Storefront API returns the value as a JSON-encoded string array, e.g.
+	// ["GPSMAP 923","GPSMAP 943"]. Field type must be list.single_line_text_field.
+	let compatibleModels: string[] | null = null;
 
-  if (raw.compatibleDevices?.value) {
-    try {
-      const parsed: unknown = JSON.parse(raw.compatibleDevices.value);
-      if (Array.isArray(parsed)) {
-        const names = parsed.filter(
-          (v): v is string => typeof v === "string" && !v.startsWith("gid://"),
-        );
-        if (names.length > 0) compatibleModels = names;
-      }
-    } catch {
-      // not valid JSON – leave compatibleModels as null
-    }
-  }
+	if (raw.compatibleDevices?.value) {
+		try {
+			const parsed: unknown = JSON.parse(raw.compatibleDevices.value);
+			if (Array.isArray(parsed)) {
+				const names = parsed.filter(
+					(v): v is string => typeof v === "string" && !v.startsWith("gid://"),
+				);
+				if (names.length > 0) compatibleModels = names;
+			}
+		} catch {
+			// not valid JSON – leave compatibleModels as null
+		}
+	}
 
-  let mapSpecifications: string[] | null = null;
+	let mapSpecifications: string[] | null = null;
 
-  if (raw.mapSpecifications?.value) {
-    try {
-      const parsed: unknown = JSON.parse(raw.mapSpecifications.value);
-      if (Array.isArray(parsed)) {
-        const specs = parsed.filter((v): v is string => typeof v === "string");
-        if (specs.length > 0) mapSpecifications = specs;
-      }
-    } catch {
-      // not valid JSON – leave mapSpecifications as null
-    }
-  }
+	if (raw.mapSpecifications?.value) {
+		try {
+			const parsed: unknown = JSON.parse(raw.mapSpecifications.value);
+			if (Array.isArray(parsed)) {
+				const specs = parsed.filter((v): v is string => typeof v === "string");
+				if (specs.length > 0) mapSpecifications = specs;
+			}
+		} catch {
+			// not valid JSON – leave mapSpecifications as null
+		}
+	}
 
-  return {
-    ...raw,
-    collections: raw.collections?.nodes ?? [],
-    compatibleModels,
-    mapSpecifications,
-  };
+	return {
+		...raw,
+		collections: raw.collections?.nodes ?? [],
+		compatibleModels,
+		mapSpecifications,
+	};
 };
 
 const cartCreateMutation = `
@@ -282,37 +306,37 @@ const cartCreateMutation = `
 
 /** Creates a Shopify cart and returns the hosted checkout URL. */
 export const CREATE_SHOPIFY_CART = async (
-  lines: Array<{ merchandiseId: string; quantity: number }>,
+	lines: Array<{ merchandiseId: string; quantity: number }>,
 ): Promise<string> => {
-  const { data, errors } = await getClient().request(cartCreateMutation, {
-    variables: { lines },
-  });
+	const { data, errors } = await getClient().request(cartCreateMutation, {
+		variables: { lines },
+	});
 
-  if (errors) throw new Error(errors.message);
+	if (errors) throw new Error(errors.message);
 
-  const userErrors = data?.cartCreate?.userErrors ?? [];
-  if (userErrors.length > 0) throw new Error(userErrors[0].message);
+	const userErrors = data?.cartCreate?.userErrors ?? [];
+	if (userErrors.length > 0) throw new Error(userErrors[0].message);
 
-  const checkoutUrl = data?.cartCreate?.cart?.checkoutUrl;
-  if (!checkoutUrl) throw new Error("Failed to create Shopify cart");
+	const checkoutUrl = data?.cartCreate?.cart?.checkoutUrl;
+	if (!checkoutUrl) throw new Error("Failed to create Shopify cart");
 
-  return checkoutUrl;
+	return checkoutUrl;
 };
 
 // Gets all products from Shopify using the Storefront API.
 // amount: number of products to fetch (defaults to 20)
 export const QUERY_PRODUCTS = async (
-  amount = 20,
+	amount = 20,
 ): Promise<ShopifyProduct[]> => {
-  const { data, errors } = await getClient().request(productsQuery, {
-    variables: {
-      first: amount,
-    },
-  });
+	const { data, errors } = await getClient().request(productsQuery, {
+		variables: {
+			first: amount,
+		},
+	});
 
-  if (errors) {
-    throw new Error(errors.message);
-  }
+	if (errors) {
+		throw new Error(errors.message);
+	}
 
-  return data?.products.nodes ?? [];
+	return data?.products.nodes ?? [];
 };
