@@ -1,3 +1,8 @@
+import {
+	findLakeDesign,
+	normalize,
+	isValidQuantity,
+} from "../lib/cart-validation";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -13,21 +18,6 @@ import {
 import { cn } from "../lib/utils";
 
 const DEFAULT_COASTER_STYLE = "Green Square";
-
-function normalize(value: string) {
-	return value.toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
-function findLakeDesign(item: CartItem, lakeDesigns: string[]) {
-	const haystack = normalize(`${item.title} ${item.handle}`);
-
-	return lakeDesigns.find((lake) => {
-		const normalizedLake = normalize(lake);
-		const shortLake = normalize(lake.replace(/\s+lake$/i, ""));
-
-		return haystack.includes(normalizedLake) || haystack.includes(shortLake);
-	});
-}
 
 function isMapItem(item: CartItem) {
 	const productType = item.productType?.toLowerCase() ?? "";
@@ -53,7 +43,12 @@ function getOption(variant: ShopifyProductVariant, name: string) {
 
 export const Route = createFileRoute("/cart")({
 	component: CartPage,
-	head: () => ({ meta: [{ title: "Shopping Cart | Hardcore Maps" }] }),
+	head: () => ({
+		meta: [
+			{ title: "Shopping Cart | Hardcore Maps" },
+			{ name: "robots", content: "noindex, follow" },
+		],
+	}),
 });
 
 function CartPage() {
@@ -61,6 +56,7 @@ function CartPage() {
 		items,
 		addItem,
 		removeItem,
+		replaceItems,
 		incrementItem,
 		decrementItem,
 		totalItems,
@@ -80,7 +76,7 @@ function CartPage() {
 	const { data: coasterProduct } = useQuery({
 		queryKey: ["product", COASTER_PRODUCT_HANDLE],
 		queryFn: () => QUERY_PRODUCT(COASTER_PRODUCT_HANDLE),
-		enabled: mapItems.length > 0,
+		enabled: items.length > 0,
 	});
 
 	const coasterLakeDesigns = useMemo(() => {
@@ -159,9 +155,78 @@ function CartPage() {
 	};
 
 	const handleCheckout = async () => {
+		if (!items.every((item) => isValidQuantity(item.quantity))) {
+			setCheckoutError(
+				"Please remove items with invalid quantities and add them again.",
+			);
+			return;
+		}
+		const coasterItems = items.filter(
+			(item) => item.handle === COASTER_PRODUCT_HANDLE,
+		);
+		if (
+			coasterItems.length &&
+			(!coasterProduct ||
+				coasterItems.some((item) => {
+					const lake = findLakeDesign(item, coasterLakeDesigns);
+					return (
+						!lake ||
+						!mapItems.some((map) => findLakeDesign(map, [lake]) === lake)
+					);
+				}))
+		) {
+			setCheckoutError(
+				"Each coaster set needs its matching lake map in your cart. Add the map or remove the coaster set.",
+			);
+			return;
+		}
 		setIsCheckingOut(true);
 		setCheckoutError(null);
 		try {
+			const products = await Promise.all(
+				[...new Set(items.map((item) => item.handle))].map((handle) =>
+					QUERY_PRODUCT(handle),
+				),
+			);
+			const refreshed = items.map((item) => {
+				const product = products.find(
+					(product) => product?.handle === item.handle,
+				);
+				const variant = product?.variants.nodes.find(
+					(variant) => variant.id === item.variantId,
+				);
+				return variant?.availableForSale
+					? {
+							...item,
+							price: variant.price.amount,
+							currencyCode: variant.price.currencyCode,
+						}
+					: null;
+			});
+			if (refreshed.some((item) => !item)) {
+				setCheckoutError(
+					"An item is no longer available. Remove it from your cart before checking out.",
+				);
+				setIsCheckingOut(false);
+				return;
+			}
+			const currentItems = refreshed.filter(
+				(item): item is CartItem => item !== null,
+			);
+			if (
+				currentItems.some(
+					(item, index) =>
+						item.price !== items[index].price ||
+						item.currencyCode !== items[index].currencyCode,
+				)
+			) {
+				replaceItems(currentItems);
+				setCheckoutError(
+					"Prices have changed. Please review the updated total, then proceed to checkout.",
+				);
+				setIsCheckingOut(false);
+				return;
+			}
 			const url = await CREATE_SHOPIFY_CART(
 				items.map((item) => ({
 					merchandiseId: item.variantId,
@@ -171,7 +236,7 @@ function CartPage() {
 			window.location.href = url;
 		} catch (err) {
 			setCheckoutError(
-				err instanceof Error ? err.message : "Something went wrong.",
+				"We couldn’t start checkout. Please check your cart and try again. If this continues, contact us.",
 			);
 			setIsCheckingOut(false);
 		}
@@ -223,7 +288,11 @@ function CartPage() {
 											params={{ handle: item.handle }}
 										>
 											<img
-												src={shopifyImageSrc(item.imageUrl, 120)}
+												src={
+													item.imageUrl
+														? shopifyImageSrc(item.imageUrl, 120)
+														: "/NavLogo.svg"
+												}
 												alt={item.imageAlt}
 												className="h-20 w-20 rounded-xl object-cover sm:h-24 sm:w-24"
 											/>
@@ -365,6 +434,7 @@ function CartPage() {
 													<button
 														type="button"
 														onClick={() =>
+															recommendation.variant &&
 															handleAddCoasterBundle(recommendation.variant)
 														}
 														disabled={!recommendation.variant.availableForSale}

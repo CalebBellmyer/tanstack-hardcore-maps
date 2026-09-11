@@ -19,7 +19,7 @@ export default function Header() {
 
 				{isHomePage ? (
 					<nav className="hidden items-center gap-8 text-sm font-semibold text-slate-700 md:flex">
-						<SectionLink hash="featured-maps">Maps</SectionLink>
+						<Link to="/products/maps">Maps</Link>
 						<Link
 							to="/products/coasters"
 							className="transition-colors hover:text-primary"
@@ -51,6 +51,21 @@ export default function Header() {
 					</nav>
 				)}
 
+				<details className="relative ml-auto mr-3 md:hidden">
+					<summary className="cursor-pointer rounded-md border px-3 py-2 text-sm font-semibold">
+						Menu
+					</summary>
+					<nav
+						aria-label="Mobile navigation"
+						className="absolute right-0 top-full mt-2 flex w-44 flex-col gap-4 rounded-xl border bg-white p-4 shadow-lg"
+					>
+						<Link to="/products/maps">Maps</Link>
+						<Link to="/products/cases">Cases</Link>
+						<Link to="/products/coasters">Coasters</Link>
+						<Link to="/faq">FAQ</Link>
+						<Link to="/contact">Contact</Link>
+					</nav>
+				</details>
 				<div className="rounded-xl border bg-background px-3 py-2 transition-colors hover:bg-accent">
 					<CartIcon />
 				</div>

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import type { ShopifyProduct } from "../lib/shopify";
 import { shopifyImageSrc } from "../lib/shopify";
@@ -14,8 +15,14 @@ const SRCSET_WIDTHS = [400, 600, 800, 1000] as const;
 
 export function ProductCard({ product, priority = false }: ProductCardProps) {
 	const { addItem } = useCart();
-	const variant = product.variants.nodes[0];
-	const price = product.priceRange.minVariantPrice.amount;
+	const [added, setAdded] = useState(false);
+	const variant =
+		product.variants.nodes.find((v) => v.availableForSale) ??
+		product.variants.nodes[0];
+	const hasOptions = product.variants.nodes.length > 1;
+	const price = hasOptions
+		? product.priceRange.minVariantPrice.amount
+		: (variant?.price.amount ?? product.priceRange.minVariantPrice.amount);
 	const currency = product.priceRange.minVariantPrice.currencyCode;
 
 	const formatted = new Intl.NumberFormat("en-US", {
@@ -69,34 +76,55 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 				<h2 className="font-bold text-base leading-snug">{product.title}</h2>
 
 				<div className="flex items-center justify-between gap-2">
-					<span className="text-xl font-bold">{formatted}</span>
-					{/* z-10 keeps the button above the invisible link */}
-					<button
-						type="button"
-						className={cn(
-							"relative z-10 shrink-0 inline-flex items-center justify-center",
-							"rounded-lg bg-primary text-primary-foreground",
-							"px-4 py-2 text-sm font-semibold",
-							"transition-colors hover:bg-primary/90",
-						)}
-						onClick={(e) => {
-							e.preventDefault();
-							if (!variant) return;
-							addItem({
-								variantId: variant.id,
-								handle: product.handle,
-								price: variant.price.amount,
-								currencyCode: variant.price.currencyCode,
-								title: product.title,
-								variantTitle: variant.title,
-								productType: product.productType,
-								imageUrl: product.featuredImage?.url ?? "",
-								imageAlt: product.featuredImage?.altText ?? product.title,
-							});
-						}}
-					>
-						Add to Cart
-					</button>
+					<span className="text-xl font-bold">
+						{hasOptions ? "From " : ""}
+						{formatted}
+					</span>
+					{hasOptions ? (
+						<Link
+							className="relative z-10 underline"
+							to="/products/$handle"
+							params={{ handle: product.handle }}
+						>
+							Choose options
+						</Link>
+					) : (
+						<>
+							{/* z-10 keeps the button above the invisible link */}
+							<button
+								type="button"
+								disabled={!variant?.availableForSale}
+								className={cn(
+									"relative z-10 shrink-0 inline-flex items-center justify-center",
+									"rounded-lg bg-primary text-primary-foreground",
+									"px-4 py-2 text-sm font-semibold",
+									"transition-colors hover:bg-primary/90",
+								)}
+								onClick={(e) => {
+									e.preventDefault();
+									if (!variant?.availableForSale) return;
+									addItem({
+										variantId: variant.id,
+										handle: product.handle,
+										price: variant.price.amount,
+										currencyCode: variant.price.currencyCode,
+										title: product.title,
+										variantTitle: variant.title,
+										productType: product.productType,
+										imageUrl: product.featuredImage?.url ?? "",
+										imageAlt: product.featuredImage?.altText ?? product.title,
+									});
+									setAdded(true);
+								}}
+							>
+								{variant?.availableForSale
+									? added
+										? "Added to cart"
+										: "Add to Cart"
+									: "Sold out"}
+							</button>
+						</>
+					)}
 				</div>
 			</div>
 		</div>
