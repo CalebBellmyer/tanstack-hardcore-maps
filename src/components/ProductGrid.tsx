@@ -5,7 +5,7 @@ import { QUERY_PRODUCTS_BY_TYPE } from "../lib/shopify";
 interface ProductGridProps {
   /** Shopify product type string — must match the value set in your Shopify admin (e.g. "Maps", "Prints"). */
   productType: string;
-  /** Max number of products to fetch (defaults to 20). */
+  /** Number of products per Shopify request (defaults to 20); all pages are loaded. */
   amount?: number;
 }
 

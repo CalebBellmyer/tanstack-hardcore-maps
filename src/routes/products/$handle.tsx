@@ -1,8 +1,17 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	notFound,
+	Link,
+	redirect,
+} from "@tanstack/react-router";
 import { useState } from "react";
 import { useCart } from "#/components/CartProvider";
-import { QUERY_PRODUCT, shopifyImageSrc } from "#/lib/shopify";
+import {
+	COASTER_PRODUCT_HANDLE,
+	QUERY_PRODUCT,
+	shopifyImageSrc,
+} from "#/lib/shopify";
 import { cn } from "#/lib/utils";
 
 const productQueryOptions = (handle: string) =>
@@ -13,6 +22,8 @@ const productQueryOptions = (handle: string) =>
 
 export const Route = createFileRoute("/products/$handle")({
 	loader: async ({ context: { queryClient }, params: { handle } }) => {
+		if (handle === COASTER_PRODUCT_HANDLE)
+			throw redirect({ to: "/products/coasters" });
 		const product = await queryClient.ensureQueryData(
 			productQueryOptions(handle),
 		);
@@ -20,6 +31,35 @@ export const Route = createFileRoute("/products/$handle")({
 		return product;
 	},
 	head: ({ loaderData }) => ({
+		links: [
+			{
+				rel: "canonical",
+				href: `https://www.hardcoremaps.com/products/${loaderData?.handle ?? ""}`,
+			},
+		],
+		scripts: loaderData
+			? [
+					{
+						type: "application/ld+json",
+						children: JSON.stringify({
+							"@context": "https://schema.org",
+							"@type": "Product",
+							name: loaderData.title,
+							description: loaderData.description,
+							image: loaderData.images.nodes.map((image) => image.url),
+							offers: loaderData.variants.nodes.map((variant) => ({
+								"@type": "Offer",
+								price: variant.price.amount,
+								priceCurrency: variant.price.currencyCode,
+								availability: variant.availableForSale
+									? "https://schema.org/InStock"
+									: "https://schema.org/OutOfStock",
+								url: `https://www.hardcoremaps.com/products/${loaderData.handle}`,
+							})),
+						}).replace(/</g, "\\u003c"),
+					},
+				]
+			: [],
 		meta: [
 			{ title: `${loaderData?.title ?? "Product"} | Hardcore Maps` },
 			{
@@ -40,6 +80,8 @@ function ProductPage() {
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [quantity, setQuantity] = useState(1);
 	const [isZoomed, setIsZoomed] = useState(false);
+	const [variantId, setVariantId] = useState("");
+	const [added, setAdded] = useState(false);
 
 	if (!product) return null;
 
@@ -48,10 +90,18 @@ function ProductPage() {
 	const isCover =
 		product.productType.toLowerCase().includes("cover") ||
 		product.productType.toLowerCase().includes("case");
-	const firstVariant = product.variants.nodes[0];
+	const firstVariant =
+		product.variants.nodes.find((v) => v.id === variantId) ??
+		product.variants.nodes.find((v) => v.availableForSale) ??
+		product.variants.nodes[0];
 
 	const handleAddToCart = () => {
-		if (!firstVariant) return;
+		if (
+			!firstVariant?.availableForSale ||
+			!Number.isSafeInteger(quantity) ||
+			quantity < 1
+		)
+			return;
 		addItem({
 			variantId: firstVariant.id,
 			handle: product.handle,
@@ -64,12 +114,19 @@ function ProductPage() {
 			imageAlt: selectedImage?.altText ?? product.title,
 			quantity,
 		});
+		setAdded(true);
 	};
 
 	const formatted = new Intl.NumberFormat("en-US", {
 		style: "currency",
-		currency: product.priceRange.minVariantPrice.currencyCode,
-	}).format(Number(product.priceRange.minVariantPrice.amount));
+		currency:
+			firstVariant?.price.currencyCode ??
+			product.priceRange.minVariantPrice.currencyCode,
+	}).format(
+		Number(
+			firstVariant?.price.amount ?? product.priceRange.minVariantPrice.amount,
+		),
+	);
 
 	const compatibleModels = product.compatibleModels ?? [];
 	const mapSpecifications = product.mapSpecifications ?? [];
@@ -77,7 +134,7 @@ function ProductPage() {
 	return (
 		<div className="min-h-screen bg-muted/30">
 			{/* Zoom overlay */}
-			{isZoomed && (
+			{isZoomed && selectedImage && (
 				<div className="fixed inset-0 z-50 flex items-center justify-center p-4">
 					{/* Backdrop */}
 					<button
@@ -108,33 +165,25 @@ function ProductPage() {
 				<div className="grid grid-cols-1 gap-8 lg:grid-cols-2 sm:grid-cols-1">
 					{/* ── Left: Image Gallery ── */}
 					<div className="rounded-xl border bg-card shadow-sm p-4 flex flex-col gap-4">
-						{/* Main image
-                All images are rendered and start downloading immediately.
-                Switching thumbnails is instant (opacity toggle, no network wait). */}
+						{/* Download the selected full-size image; thumbnails stay lightweight. */}
 						<button
 							type="button"
 							aria-label="Zoom image"
 							className="relative aspect-square cursor-zoom-in overflow-hidden rounded-xl bg-muted w-full"
 							onClick={() => setIsZoomed(true)}
 						>
-							{images.map((img, i) => (
+							{selectedImage && (
 								<img
-									key={img.url}
-									src={shopifyImageSrc(img.url, 600)}
+									src={shopifyImageSrc(selectedImage.url, 600)}
 									srcSet={SRCSET_WIDTHS.map(
-										(w) => `${shopifyImageSrc(img.url, w)} ${w}w`,
+										(w) => `${shopifyImageSrc(selectedImage.url, w)} ${w}w`,
 									).join(", ")}
-									sizes="(min-width: 1024px) 50vw, 100vw"
-									alt={img.altText ?? product.title}
-									fetchPriority={i === 0 ? "high" : "auto"}
-									className={cn(
-										"absolute inset-0 h-full w-full object-contain transition-opacity duration-150",
-										i === selectedIndex
-											? "opacity-100"
-											: "opacity-0 pointer-events-none",
-									)}
+									sizes="(min-width: 1024px) 520px, 100vw"
+									alt={selectedImage.altText ?? product.title}
+									fetchPriority="high"
+									className="absolute inset-0 h-full w-full object-contain"
 								/>
-							))}
+							)}
 						</button>
 
 						{/* Thumbnails */}
@@ -173,12 +222,12 @@ function ProductPage() {
 								</h1>
 							)}
 							{!isCover && (
-								<p className="text-3xl font-bold tracking-tight">
+								<h1 className="text-3xl font-bold tracking-tight">
 									{product.title}
 									<span> 3D Map</span>
-								</p>
+								</h1>
 							)}
-							{product.collections && (
+							{product.collections[0] && (
 								<p className="mt-1 text-sm text-muted-foreground">
 									{product.collections[0].handle.slice(0, 1).toUpperCase() +
 										product.collections[0].handle.slice(1)}
@@ -186,6 +235,34 @@ function ProductPage() {
 							)}
 						</div>
 
+						{product.variants.nodes.length > 1 && (
+							<label className="flex flex-col gap-2">
+								Options
+								<select
+									value={firstVariant?.id}
+									onChange={(e) => {
+										setVariantId(e.target.value);
+										setAdded(false);
+									}}
+									className="rounded-md border p-2"
+								>
+									{product.variants.nodes.map((v) => (
+										<option key={v.id} value={v.id}>
+											{v.title}
+											{v.availableForSale ? "" : " — Sold out"}
+										</option>
+									))}
+								</select>
+							</label>
+						)}
+						{added && (
+							<p role="status">
+								Added to cart.{" "}
+								<Link to="/cart" className="underline">
+									View cart
+								</Link>
+							</p>
+						)}
 						{/* Price + Qty + Add to Cart */}
 						<div className="rounded-lg border">
 							<div className="flex divide-x">
@@ -201,19 +278,32 @@ function ProductPage() {
 									<div className="flex items-center gap-2">
 										<input
 											type="number"
+											aria-label="Quantity"
+											step={1}
 											min={1}
 											value={quantity}
 											onChange={(e) =>
-												setQuantity(Math.max(1, Number(e.target.value) || 1))
+												setQuantity(
+													Math.min(
+														Number.MAX_SAFE_INTEGER,
+														Math.max(
+															1,
+															Math.floor(Number(e.target.value) || 1),
+														),
+													),
+												)
 											}
 											className="w-16 rounded-md border border-input bg-background px-2 py-1.5 text-sm"
 										/>
 										<button
 											type="button"
 											onClick={handleAddToCart}
+											disabled={!firstVariant?.availableForSale}
 											className="flex-1 rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
 										>
-											Add to Cart
+											{firstVariant?.availableForSale
+												? "Add to Cart"
+												: "Sold out"}
 										</button>
 									</div>
 									<p className="text-xs text-muted-foreground">

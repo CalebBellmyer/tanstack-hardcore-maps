@@ -6,11 +6,9 @@ import {
   Layers3,
   MapPinned,
   PackageCheck,
-  ShoppingCart,
   Waves,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -114,6 +112,10 @@ export const Route = createFileRoute("/")({
 
     return { products };
   },
+  head: () => ({
+    meta: [{ title: "3D Lake Maps Made in Oklahoma | Hardcore Maps" }, { name: "description", content: "Shop multicolor 3D lake maps made in Oklahoma. Explore underwater contours, find your favorite lake, and enjoy free shipping." }],
+    links: [{ rel: "canonical", href: "https://www.hardcoremaps.com/" }],
+  }),
   component: LandingRouteComponent,
 });
 
@@ -126,7 +128,6 @@ export function LandingRouteComponent() {
 export function HardcoreMapsLandingPage({
   products,
   heroProduct = products[0],
-  logoSrc = "/NavLogo.svg",
 }: LandingPageProps) {
   return (
     <div className="min-h-screen bg-white text-slate-950">
@@ -217,7 +218,7 @@ export function FeaturedProductVisual({
 }) {
   return (
     <Card className="overflow-hidden rounded-3xl border-slate-200 p-3 shadow-[0_20px_60px_rgba(15,23,42,0.09)]">
-      <div className="relative min-h-87. overflow-hidden rounded-2xl sm:min-h-112. lg:min-h-135">
+      <div className="relative min-h-87 overflow-hidden rounded-2xl sm:min-h-112 lg:min-h-135">
         <img
           src={product.imageUrl}
           alt={product.imageAlt ?? product.title}

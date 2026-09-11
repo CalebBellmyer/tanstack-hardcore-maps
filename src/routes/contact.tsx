@@ -68,7 +68,7 @@ function ContactPage() {
           </a>
 
           <p className="text-xs text-muted-foreground">
-            Opens your default email app
+            {CONTACT_EMAIL} — opens your default email app
           </p>
         </div>
       </div>

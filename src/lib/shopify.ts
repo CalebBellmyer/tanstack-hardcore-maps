@@ -1,3 +1,4 @@
+import { isValidQuantity } from "./cart-validation";
 import { createStorefrontApiClient } from "@shopify/storefront-api-client";
 
 export const COASTER_PRODUCT_HANDLE =
@@ -69,7 +70,7 @@ export interface ShopifyProductDetail {
 
 /** Appends a Shopify CDN width param to get a resized image URL. */
 export function shopifyImageSrc(url: string, width: number) {
-	const u = new URL(url);
+	const u = new URL(url || "/NavLogo.svg", "https://www.hardcoremaps.com");
 	u.searchParams.set("width", String(width));
 	return u.toString();
 }
@@ -93,9 +94,20 @@ function getClient() {
 	return _client;
 }
 
+interface ProductPageResponse {
+	data?: {
+		products: {
+			nodes: ShopifyProduct[];
+			pageInfo: { hasNextPage: boolean; endCursor: string | null };
+		};
+	};
+	errors?: { message?: string };
+}
+
 const productsQuery = `
-  query ProductsQuery($first: Int!) {
-    products(first: $first) {
+  query ProductsQuery($first: Int!, $after: String) {
+    products(first: $first, after: $after) {
+      pageInfo { hasNextPage endCursor }
       nodes {
         id
         title
@@ -133,8 +145,9 @@ const productsQuery = `
 `;
 
 const productsByTypeQuery = `
-  query ProductsByType($first: Int!, $query: String!) {
-    products(first: $first, query: $query) {
+  query ProductsByType($first: Int!, $query: String!, $after: String) {
+    products(first: $first, query: $query, after: $after) {
+      pageInfo { hasNextPage endCursor }
       nodes {
         id
         title
@@ -175,22 +188,32 @@ export const QUERY_PRODUCTS_BY_TYPE = async (
 	productType: string,
 	amount = 20,
 ): Promise<ShopifyProduct[]> => {
-	const { data, errors } = await getClient().request(productsByTypeQuery, {
-		variables: {
-			first: amount,
-			query: `product_type:'${productType}'`,
-		},
-	});
-
-	if (errors) {
-		throw new Error(errors.message);
-	}
-
-	return data?.products.nodes ?? [];
+	const products: ShopifyProduct[] = [];
+	let after: string | null = null;
+	do {
+		const { data, errors }: ProductPageResponse = await getClient().request<{
+			products: {
+				nodes: ShopifyProduct[];
+				pageInfo: { hasNextPage: boolean; endCursor: string | null };
+			};
+		}>(productsByTypeQuery, {
+			variables: {
+				first: Math.min(amount, 250),
+				query: `product_type:'${productType}'`,
+				after,
+			},
+		});
+		if (errors) throw new Error(errors.message);
+		products.push(...(data?.products.nodes ?? []));
+		after = data?.products.pageInfo.hasNextPage
+			? data.products.pageInfo.endCursor
+			: null;
+	} while (after);
+	return products;
 };
 
 const productByHandleQuery = `
-  query ProductByHandle($handle: String!) {
+  query ProductByHandle($handle: String!, $after: String) {
     product(handle: $handle) {
       id
       title
@@ -215,7 +238,8 @@ const productByHandleQuery = `
       priceRange {
         minVariantPrice { amount currencyCode }
       }
-      variants(first: 100) {
+      variants(first: 100, after: $after) {
+        pageInfo { hasNextPage endCursor }
         nodes {
           id title availableForSale
           selectedOptions {
@@ -248,6 +272,19 @@ export const QUERY_PRODUCT = async (
 	if (!data?.product) return null;
 
 	const raw = data.product;
+	let after = raw.variants.pageInfo.hasNextPage
+		? raw.variants.pageInfo.endCursor
+		: null;
+	while (after) {
+		const page = await getClient().request(productByHandleQuery, {
+			variables: { handle, after },
+		});
+		if (page.errors) throw new Error(page.errors.message);
+		const variants = page.data?.product?.variants;
+		if (!variants) throw new Error("Unable to load product options.");
+		raw.variants.nodes.push(...variants.nodes);
+		after = variants.pageInfo.hasNextPage ? variants.pageInfo.endCursor : null;
+	}
 
 	// Pull compatible device names from the custom.compatible_devices metafield.
 	// The Storefront API returns the value as a JSON-encoded string array, e.g.
@@ -308,6 +345,8 @@ const cartCreateMutation = `
 export const CREATE_SHOPIFY_CART = async (
 	lines: Array<{ merchandiseId: string; quantity: number }>,
 ): Promise<string> => {
+	if (!lines.length || lines.some((line) => !isValidQuantity(line.quantity)))
+		throw new Error("Please enter whole-number quantities greater than zero.");
 	const { data, errors } = await getClient().request(cartCreateMutation, {
 		variables: { lines },
 	});
@@ -326,17 +365,24 @@ export const CREATE_SHOPIFY_CART = async (
 // Gets all products from Shopify using the Storefront API.
 // amount: number of products to fetch (defaults to 20)
 export const QUERY_PRODUCTS = async (
-	amount = 20,
+	amount?: number,
 ): Promise<ShopifyProduct[]> => {
-	const { data, errors } = await getClient().request(productsQuery, {
-		variables: {
-			first: amount,
-		},
-	});
-
-	if (errors) {
-		throw new Error(errors.message);
-	}
-
-	return data?.products.nodes ?? [];
+	const products: ShopifyProduct[] = [];
+	let after: string | null = null;
+	do {
+		const { data, errors }: ProductPageResponse = await getClient().request<{
+			products: {
+				nodes: ShopifyProduct[];
+				pageInfo: { hasNextPage: boolean; endCursor: string | null };
+			};
+		}>(productsQuery, {
+			variables: { first: Math.min(amount ?? 100, 250), after },
+		});
+		if (errors) throw new Error(errors.message);
+		products.push(...(data?.products.nodes ?? []));
+		after = data?.products.pageInfo.hasNextPage
+			? data.products.pageInfo.endCursor
+			: null;
+	} while (after && (amount === undefined || products.length < amount));
+	return amount === undefined ? products : products.slice(0, amount);
 };
